@@ -10,6 +10,6 @@ status varchar(100)
 drop table if exists second;
 CREATE TABLE `second` (
 id bigint AUTO_INCREMENT PRIMARY KEY,
-firstId bigint 
+first_id bigint 
 )
 ```

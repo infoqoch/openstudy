@@ -1,5 +1,6 @@
 package qoch.springjdbctemplate.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Repository
 public class FirstRepository {
     private final NamedParameterJdbcTemplate template;
@@ -32,6 +34,7 @@ public class FirstRepository {
         SqlParameterSource param = new BeanPropertySqlParameterSource(first);
         Number key = jdbcInsert.executeAndReturnKey(param);
         first.setId(key.longValue());
+        log.info("first = {}", first);
         return first;
     }
 
@@ -60,10 +63,6 @@ public class FirstRepository {
         return template.query(sql, firstRowMapper());
     }
 
-    private RowMapper<First> firstRowMapper() {
-        return BeanPropertyRowMapper.newInstance(First.class);
-    }
-
     public int countByIdAndStatus(Long id, First.Status status) {
         String sql = "select count(*) from first where id = :id and status = :status";
 
@@ -72,5 +71,9 @@ public class FirstRepository {
                 .addValue("status", status.toString());
 
         return template.queryForObject(sql, param, Integer.class);
+    }
+
+    private RowMapper<First> firstRowMapper() {
+        return BeanPropertyRowMapper.newInstance(First.class);
     }
 }
