@@ -1,4 +1,4 @@
-package qoch.springjdbctemplate.model;
+package qoch.springjdbctemplate.domain;
 
 import lombok.*;
 

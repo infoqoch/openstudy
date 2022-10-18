@@ -1,6 +1,5 @@
-package qoch.springjdbctemplate.repository;
+package qoch.springjdbctemplate.domain;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
@@ -10,14 +9,11 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
-import qoch.springjdbctemplate.model.First;
 
 import javax.sql.DataSource;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Slf4j
 @Repository
 public class FirstRepository {
     private final NamedParameterJdbcTemplate template;
@@ -34,16 +30,14 @@ public class FirstRepository {
         SqlParameterSource param = new BeanPropertySqlParameterSource(first);
         Number key = jdbcInsert.executeAndReturnKey(param);
         first.setId(key.longValue());
-        log.info("first = {}", first);
         return first;
     }
 
-    public int updateStatus(First first) {
-        String sql = "update first set status = :status where id = :id";
+    public int updateStatusNewToDone(Long id) {
+        String sql = "update first set status = 'DONE' where id = :id and status = 'NEW'";
 
         SqlParameterSource param = new MapSqlParameterSource()
-                .addValue("status", first.getStatus().toString())
-                .addValue("id", first.getId());
+                .addValue("id", id);
         return template.update(sql, param);
     }
 
@@ -58,18 +52,15 @@ public class FirstRepository {
         }
     }
 
-    public List<First> findAll() {
-        String sql = "select * from first";
-        return template.query(sql, firstRowMapper());
+    public int countByIdAndStatus(First.Status status, Long id) {
+        String sql = "select count(*) from first where id = :id and status = :status";
+        Map<String, Object> param = Map.of("id", id, "status", status.toString());
+        return template.queryForObject(sql, param, Integer.class);
     }
 
-    public int countByIdAndStatus(Long id, First.Status status) {
-        String sql = "select count(*) from first where id = :id and status = :status";
-
-        SqlParameterSource param = new MapSqlParameterSource()
-                .addValue("id", id)
-                .addValue("status", status.toString());
-
+    public int countByIdAndStatusForUpdate(First.Status status, Long id) {
+        String sql = "select count(*) from first where id = :id and status = :status FOR UPDATE";
+        Map<String, Object> param = Map.of("id", id, "status", status.toString());
         return template.queryForObject(sql, param, Integer.class);
     }
 
