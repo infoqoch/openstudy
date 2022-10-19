@@ -14,13 +14,16 @@ import qoch.springjdbctemplate.domain.SecondRepository;
 @Service
 @Transactional(isolation = Isolation.REPEATABLE_READ)
 @RequiredArgsConstructor
-public class MyService {
+public class DeadlockService {
     private final FirstRepository firstRepository;
     private final SecondRepository secondRepository;
 
     public long executeV1(Long firstId, int sleep){
         if(firstRepository.countByIdAndStatus(First.Status.NEW, firstId)==0)
-            throw new IllegalArgumentException("no first data with status NEW and first.id "+  firstId);
+            throw new IllegalArgumentException("first 테이블 중 상태가 NEW인 레코드가 없다. first.id : "+  firstId);
+
+        if(secondRepository.countByFirstId(firstId)>0)
+            throw new IllegalArgumentException("second 테이블에 요청한 first_id를 가진 레코드가 이미 존재한다. first_id : "+  firstId);
 
         sleep(sleep);
 
@@ -36,7 +39,10 @@ public class MyService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public long executeV2(Long firstId, int sleep){
         if(firstRepository.countByIdAndStatus(First.Status.NEW, firstId)==0)
-            throw new IllegalArgumentException("no first data with status NEW and first.id "+  firstId);
+            throw new IllegalArgumentException("first 테이블 중 상태가 NEW인 레코드가 없다. first.id : "+  firstId);
+
+        if(secondRepository.countByFirstId(firstId)>0)
+            throw new IllegalArgumentException("second 테이블에 요청한 first_id를 가진 레코드가 이미 존재한다. first_id : "+  firstId);
 
         sleep(sleep);
 
@@ -50,8 +56,13 @@ public class MyService {
     }
 
     public long executeV3(Long firstId, int sleep){
+        log.info("FirstRepository#countByIdAndStatusForUpdate | first.id : {}", firstId);
         if(firstRepository.countByIdAndStatusForUpdate(First.Status.NEW, firstId)==0)
-            throw new IllegalArgumentException("no first data with status NEW and first.id "+  firstId);
+            throw new IllegalArgumentException("first 테이블 중 상태가 NEW인 레코드가 없다. first.id : "+  firstId);
+
+        log.info("SecondRepository.countByFirstIdForUpdate | first.id : {}", firstId);
+        if(secondRepository.countByFirstIdForUpdate(firstId)>0)
+            throw new IllegalArgumentException("second 테이블에 요청한 first_id를 가진 레코드가 이미 존재한다. first_id : "+  firstId);
 
         sleep(sleep);
 
@@ -65,8 +76,14 @@ public class MyService {
     }
 
     public long executeV4(Long firstId, int sleep){
+        log.info("before FirstRepository#updateStatusNewToDone | first.id : {}", firstId);
         if(firstRepository.updateStatusNewToDone(firstId)==0)
-            throw new IllegalArgumentException("no first data with status NEW and first.id "+  firstId);
+            throw new IllegalArgumentException("first 테이블 중 상태가 NEW인 레코드가 없다. first.id : "+  firstId);
+
+        if(secondRepository.countByFirstIdForUpdate(firstId)>0)
+            throw new IllegalArgumentException("second 테이블에 요청한 first_id를 가진 레코드가 이미 존재한다. first_id : "+  firstId);
+
+        sleep(sleep);
 
         log.info("before SecondRepository#save | first.id : {}", firstId);
         secondRepository.save(Second.builder().firstId(firstId).build());

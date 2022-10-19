@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@Transactional // JPA는 묵시적. 다른 프레임워크는 선언해야 한다.
+@Transactional
 @RequiredArgsConstructor
 public class FirstService {
     private final FirstRepository firstRepository;

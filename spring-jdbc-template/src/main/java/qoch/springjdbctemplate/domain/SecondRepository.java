@@ -33,4 +33,10 @@ public class SecondRepository {
         Map<String, Object> param = Map.of("first_id", firstId);
         return template.queryForObject(sql, param, Integer.class);
     }
+
+    public int countByFirstIdForUpdate(Long firstId) {
+        String sql = "select count(*) from second where first_id = :first_id FOR UPDATE";
+        Map<String, Object> param = Map.of("first_id", firstId);
+        return template.queryForObject(sql, param, Integer.class);
+    }
 }

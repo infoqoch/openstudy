@@ -16,7 +16,10 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// ForUpdateRepositoryTest 에서는 트랜잭션 상태에서 for update가 해당 select 에 대한 배타적인 락의 획득을 실패함을 확인하였다.
+// for update와 배타적 락을 테스트 한다.
+// sleep을 쓰레드 두 개가 1000만큼 준다. 만약 동기적 처리가 되었으면 최소 1000만큼 기다리고, 그렇지 않으면 1000이하로 처리되었음을 가정할 수 있다.
+// 전제조건은 sleep이외의 모든 기능의 처리 시간이 1000 이하 이다.
+// pk 등 index가 잡힌 레코드를 탐색했을 때, 값이 존재하지 않는 한 동기적 처리가 됨을 확인할 수 있다.
 @Slf4j
 @SpringBootTest
 public class ForUpdateServiceTest {
@@ -47,7 +50,27 @@ public class ForUpdateServiceTest {
     }
 
     @Test
-    @DisplayName("for update는 존재하지 않는 값에 대해서 동기적 동작을 보장하지 않는다. 두 개 스레드의 시간 차이가 슬립을 초과하는 시간이 걸리지 않았다는 것으로 미루어 볼 수 있다.")
+    @DisplayName("for update는 두 개의 다른 값을 pk를 기준으로 조회하였고 락을 걸지 않는다.")
+    void if_exist_diff_two_then_working_synchronously() throws ExecutionException, InterruptedException {
+        /*  !! 중요 !!  */
+        // db에 실제로 존재하는 레코드를 준비해야 한다. 테스트 코드에서 생성하려 하였으나 before each는 유닛 테스트의 트랜잭션에 전파되어 정상적으로 동작하지 않는다.
+        First first1 = alreadyInsertedRecordAndNew(206l);
+        First first2 = First.builder().id(ThreadLocalRandom.current().nextLong(100000l)).status(First.Status.NEW).build();;
+
+        // when
+        CompletableFuture<Long> f1 = CompletableFuture.supplyAsync(() -> forUpdateService.updateStatus(first1, 1000));
+        CompletableFuture<Long> f2 = CompletableFuture.supplyAsync(() -> forUpdateService.updateStatus(first2, 1000));
+        CompletableFuture<Void> future = CompletableFuture.allOf(f1, f2);
+
+        sleep(100);
+        future.get();
+
+        long diff = f2.get() - f1.get();
+        assertThat(Math.abs(diff)).isLessThan(1000l);
+    }
+
+    @Test
+    @DisplayName("for update는 존재하지 않는 값에 대해 동기적 동작을 보장하지 않는다.")
     void if_not_exist_then_deadlock() throws ExecutionException, InterruptedException {
         // given
         // 존재하지 않는 값
