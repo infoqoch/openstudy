@@ -1,6 +1,5 @@
 package qoch.auth.template;
 
-
 import java.util.function.BiConsumer;
 
 public class AdminAuthBiConsumer<E extends Auth, U> {

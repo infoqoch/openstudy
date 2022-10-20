@@ -1,16 +1,16 @@
 package qoch.auth.template;
 
-import qoch.auth.template.Admin;
-import qoch.auth.template.AdminAuthBiConsumer;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static qoch.auth.template.Admin.Type.*;
+import static qoch.auth.template.Admin.Type.BASIC;
+import static qoch.auth.template.Admin.Type.SUPER;
 
+// Consumer로 정의한다.
 class AdminAuthBiConsumerTest {
     @Test
-    void test_basic() {
+    void log() {
         // given
         final AdminAuthBiConsumer<Admin, Long> logAccessUser = new AdminAuthBiConsumer.Builder<Admin, Long>()
                 .supers((a, id) -> System.out.println("슈퍼 유저에게 허용된 데이터 접근입니다^^. 접근 대상 : " + id))
@@ -51,20 +51,22 @@ class AdminAuthBiConsumerTest {
         execute.compareTo(admin, target);
 
         // then
-        assertThat(spy[0]).isEqualTo(result.superAdmin);
+        assertThat(spy[0]).isEqualTo(result.supers);
         assertThat(spy[1]).isEqualTo(result.theSameId);
         assertThat(spy[2]).isEqualTo(result.elese);
     }
 
     enum Result {
-        SUPER(true, false, false), SAME(false, true, false), ELSE(false, false, true);
+        SUPER(true, false, false)
+        , SAME(false, true, false)
+        , ELSE(false, false, true);
 
-        private final boolean superAdmin;
+        private final boolean supers;
         private final boolean theSameId;
         private final boolean elese;
 
-        Result(boolean superAdmin, boolean theSameId, boolean elese) {
-            this.superAdmin = superAdmin;
+        Result(boolean supers, boolean theSameId, boolean elese) {
+            this.supers = supers;
             this.theSameId = theSameId;
             this.elese = elese;
         }
