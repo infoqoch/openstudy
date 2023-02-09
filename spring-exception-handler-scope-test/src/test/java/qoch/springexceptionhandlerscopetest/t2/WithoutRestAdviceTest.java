@@ -1,6 +1,7 @@
 package qoch.springexceptionhandlerscopetest.t2;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,6 +40,7 @@ public class WithoutRestAdviceTest {
     }
 
     @Test
+    @DisplayName("RestController가 아닌 경우 ViewExceptionHandler 어드바이스가 정상 동작한다. 성공한다. (1)")
     void view_page() throws Exception {
         mockMvc.perform(get("/view/page"))
                 .andDo(print())
@@ -47,6 +49,7 @@ public class WithoutRestAdviceTest {
     }
 
     @Test
+    @DisplayName("RestController가 아닌 경우 ViewExceptionHandler 어드바이스가 정상 동작한다. 성공한다. (2)")
     void view_api() throws Exception {
         mockMvc.perform(get("/view/api"))
                 .andDo(print())
