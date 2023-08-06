@@ -80,7 +80,7 @@ public class DeadlockService {
         if(firstRepository.updateStatusNewToDone(firstId)==0)
             throw new IllegalArgumentException("first 테이블 중 상태가 NEW인 레코드가 없다. first.id : "+  firstId);
 
-        if(secondRepository.countByFirstIdForUpdate(firstId)>0)
+        if(secondRepository.countByFirstId(firstId)>0)
             throw new IllegalArgumentException("second 테이블에 요청한 first_id를 가진 레코드가 이미 존재한다. first_id : "+  firstId);
 
         sleep(sleep);
